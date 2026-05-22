@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escritorio - Timón en la Tormenta</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #0c0805;
+            background-image: radial-gradient(circle, #26180f 0%, #0c0805 100%);
+            color: #ebdcb9;
+            font-family: 'Times New Roman', Times, serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            padding: 15px;
+        }
+
+        .interfaz-contenedor {
+            width: 100%;
+            height: 100%;
+            max-width: 1400px;
+            max-height: 850px;
+            background-color: #1a100a;
+            border: 3px double #78522e;
+            border-radius: 4px;
+            padding: 20px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.95), inset 0 0 30px rgba(120,82,46,0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        h1 {
+            color: #c49a45;
+            font-size: 1.6rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid #78522e;
+            padding-bottom: 5px;
+            height: 40px;
+        }
+
+        /* Bloqueo Inicial */
+        .pantalla-bloqueada {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            gap: 20px;
+            text-align: center;
+        }
+
+        .pantalla-bloqueada h2 {
+            color: #a63232;
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .caja-entrada {
+            background-color: #110a06;
+            border: 1px solid #78522e;
+            color: #ebdcb9;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 1.3rem;
+            padding: 10px 15px;
+            text-align: center;
+            width: 280px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .boton-marron {
+            background-color: #4a321c;
+            color: #ebdcb9;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 0.95rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            padding: 12px 25px;
+            border: 1px solid #78522e;
+            cursor: pointer;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+        }
+
+        .boton-marron:hover {
+            background-color: #5d3f24;
+        }
+
+        .oculto {
+            display: none !important;
+        }
+
+        /* Estructura del Juego Abierto */
+        .seccion-explicativa {
+            background-color: #110a06;
+            border: 1px solid #4a321c;
+            padding: 10px 15px;
+            border-radius: 4px;
+        }
+
+        p.instrucciones {
+            color: #c2b299;
+            text-align: justify;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        /* Área del Videojuego Canvas */
+        .contenedor-arcade {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #05070a;
+            border: 2px solid #54371e;
+            position: relative;
+            min-height: 0;
+        }
+
+        canvas {
+            display: block;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.9);
+        }
+
+        .panel-estado-juego {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(23, 14, 9, 0.95);
+            border: 2px solid #78522e;
+            padding: 25px 45px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            box-shadow: 0 0 30px rgba(0,0,0,0.9);
+            z-index: 100;
+        }
+
+        .panel-estado-juego h3 {
+            color: #c49a45;
+            text-transform: uppercase;
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+        }
+
+        /* Éxito de la Pantalla */
+        .pantalla-exito {
+            width: 100%;
+            height: 100%;
+            background-color: #0d1a0e;
+            border: 1px solid #3b7a42;
+            padding: 40px;
+            text-align: center;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .pantalla-exito h2 {
+            color: #62c46e;
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .codigo-recompensa {
+            display: inline-block;
+            background-color: #050a05;
+            color: #62c46e;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 2.5rem;
+            padding: 15px 40px;
+            letter-spacing: 5px;
+            border: 1px solid #244d28;
+            box-shadow: 0 0 15px rgba(98, 196, 110, 0.2);
+            margin: 10px 0;
+        }
+
+        .pergamino-pista {
+            background-color: #17110a;
+            border: 1px dashed #78522e;
+            padding: 20px;
+            border-radius: 4px;
+            font-style: italic;
+            color: #ebdcb9;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.6);
+            max-width: 800px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="interfaz-contenedor">
+        <!-- SECCIÓN 1: PANEL DE BLOQUEO DE SEGURIDAD -->
+        <div class="pantalla-bloqueada" id="bloque-candado">
+            <h2>Acceso Denegado: Terminal del Escritorio</h2>
+            <p>Este sistema requiere la validación del santo y seña obtenido en los manuscritos de la Bodega:</p>
+            <input type="text" class="caja-entrada" id="codigo-acceso" placeholder="INTRODUZCA CLAVE...">
+            <button class="boton-marron" style="margin-top: 10px;" onclick="desbloquearPantalla()">Descifrar Acceso</button>
+        </div>
+
+        <!-- SECCIÓN 2: COMPONENTES DEL VIDEOJUEGO ARCADE -->
+        <h1 class="elementos-juego oculto">Pantalla 4: Tempestad Atlántica de Alta Dificultad</h1>
+        
+        <div class="seccion-explicativa elementos-juego oculto" id="instrucciones-juego">
+            <p class="instrucciones">
+                Una violenta tempestad azota el mar océano y la flotilla de 1492 avanza descontrolada hacia una barrera de arrecifes inexplorados. <strong>Objetivo del juego:</strong> Tome los mandos físicos del navío. Use las <strong>Flechas de Dirección de su Teclado (Arriba y Abajo)</strong> o las teclas <strong>W y S</strong> para gobernar verticalmente la carabela. Evite colisionar con los acantilados de piedra que emergen del agua hasta que el indicador de distancia alcance el cien por cien de la travesía.
+            </p>
+        </div>
+
+        <div class="contenedor-arcade elementos-juego oculto" id="cuerpo-juego">
+            <canvas id="arcadeCanvas" width="1100" height="420"></canvas>
+
+            <div class="panel-estado-juego" id="menu-juego">
+                <h3 id="texto-estado">Simulador de Tormenta Listo</h3>
+                <p style="font-size: 0.9rem; color: #c2b299;">Nivel de Oleaje: Extremo. Maniobre con máxima precisión.</p>
+                <button class="boton-marron" id="btn-accion-juego" onclick="iniciarVideojuego()">Levar Anclas</button>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 3: PANTALLA DE ÉXITO CON LA PISTA ORIGINAL HACIA EL TIMÓN -->
+        <div class="pantalla-exito" id="bloque-exito">
+            <h2>Maniobra Náutica Concluida con Éxito</h2>
+            <p>Ha salvado la carabela de la destrucción. Registre el santo y seña comercial obtenido:</p>
+            
+            <div class="codigo-recompensa">ESPECIAS</div>
+            
+            <div class="pergamino-pista">
+                <strong>Enigma de localización de la Pantalla 5:</strong><br>
+                "Los almacenes comerciales se encuentran inventariados, mas el rumbo de la flota no se gobierna desde los papeles del escritorio. Es tiempo de tomar el mando físico de la navegación. Abandone los aposentos del capitán y suba hacia la zona de gobierno de la cubierta principal. El siguiente mecanismo de acceso le aguarda activo en la pantalla fijada cerca del timón del barco."
+            </div>
+            <p style="font-size: 0.95rem; color: #a19279;">Diríjase a esa terminal en la sala e inserte el nuevo código para romper el próximo sellado.</p>
+        </div>
+    </div>
+
+    <script>
+        const CODIGO_REQUERIDO_ENTRADA = "GUANAHANI";
+        
+        function desbloquearPantalla() {
+            const claveIngresada = document.getElementById('codigo-acceso').value.trim().toUpperCase();
+
+            if (claveIngresada === CODIGO_REQUERIDO_ENTRADA) {
+                document.getElementById('bloque-candado').style.display = 'none';
+                const componentesJuego = document.querySelectorAll('.elementos-juego');
+                componentesJuego.forEach(elemento => elemento.classList.remove('oculto'));
+                ajustarCanvas();
+            } else {
+                alert("Código de validación incorrecto. El terminal del Escritorio permanece sellado.");
+            }
+        }
+
+        const canvas = document.getElementById('arcadeCanvas');
+        const ctx = canvas.getContext('2d');
+        const menuJuego = document.getElementById('menu-juego');
+        const textoEstado = document.getElementById('texto-estado');
+        const btnAccion = document.getElementById('btn-accion-juego');
+
+        function ajustarCanvas() {
+            const contenedor = canvas.parentElement;
+            canvas.width = contenedor.clientWidth - 10;
+            canvas.height = Math.min(420, contenedor.clientHeight - 10);
+        }
+        window.addEventListener('resize', ajustarCanvas);
+
+        let juegoActivo = false;
+        let loopJuego;
+        
+        let nave = { x: 70, y: 180, ancho: 55, alto: 45, velocidad: 7 }; // Velocidad vertical aumentada
+        let teclas = { up: false, down: false };
+
+        let obstaculos = [];
+        let particulasMadera = [];
+        let gotasLluvia = [];
+        let velocidadObstaculos = 6.5; // Dificultad base de avance más rápida
+        let distanciaRecorrida = 0;
+        const DISTANCIA_VICTORIA = 150; // Trayecto más largo para mayor dificultad
+        let frameCount = 0;
+
+        // Inicializar gotas de lluvia de tormenta de fondo
+        for(let i=0; i<60; i++) {
+            gotasLluvia.push({
+                x: Math.random() * 1200,
+                y: Math.random() * 450,
+                v: Math.random() * 8 + 10,
+                l: Math.random() * 15 + 10
+            });
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (!juegoActivo) return;
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') { teclas.up = true; e.preventDefault(); }
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') { teclas.down = true; e.preventDefault(); }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') teclas.up = false;
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') teclas.down = false;
+        });
+
+        function iniciarVideojuego() {
+            menuJuego.style.display = 'none';
+            juegoActivo = true;
+            
+            nave.y = canvas.height / 2 - 22;
+            obstaculos = [];
+            particulasMadera = [];
+            distanciaRecorrida = 0;
+            velocidadObstaculos = 6.5;
+            frameCount = 0;
+            teclas.up = false;
+            teclas.down = false;
+
+            loopJuego = requestAnimationFrame(actualizarPartida);
+        }
+
+        function generarExplosionMadera(x, y) {
+            for(let i=0; i<25; i++) {
+                particulasMadera.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    size: Math.random() * 5 + 3,
+                    alpha: 1
+                });
+            }
+        }
+
+        function actualizarPartida() {
+            frameCount++;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. DIBUJAR MAR PROFUNDO CON GRADIENTES DINÁMICOS
+            let gradienteMar = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradienteMar.addColorStop(0, '#091621');
+            gradienteMar.addColorStop(0.5, '#0e2334');
+            gradienteMar.addColorStop(1, '#050c12');
+            ctx.fillStyle = gradienteMar;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 2. OLEAJE DINÁMICO EN MOVIMIENTO SINUSOIDAL (EFECTO PARALLAX)
+            ctx.fillStyle = 'rgba(23, 53, 79, 0.4)';
+            for (let i = 0; i < canvas.width; i += 5) {
+                let y1 = Math.sin((i + frameCount * 4) * 0.015) * 15 + (canvas.height - 80);
+                ctx.fillRect(i, y1, 5, canvas.height);
+            }
+
+            // Renderizado de Lluvia de Tormenta Inclinada por Viento
+            ctx.strokeStyle = 'rgba(174, 194, 211, 0.25)';
+            ctx.lineWidth = 1.5;
+            gotasLluvia.forEach(gota => {
+                gota.x -= 4; // Inclinación
+                gota.y += gota.v;
+                if(gota.y > canvas.height) { gota.y = -20; gota.x = Math.random() * canvas.width; }
+                ctx.beginPath();
+                ctx.moveTo(gota.x, gota.y);
+                ctx.lineTo(gota.x - 4, gota.y + gota.l);
+                ctx.stroke();
+            });
+
+            if (!juegoActivo) {
+                // Procesar partículas de madera si la partida ya ha terminado en colisión
+                actualizarParticasMadera();
+                if(particulasMadera.length > 0) loopJuego = requestAnimationFrame(actualizarPartida);
+                return;
+            }
+
+            // 3. MOVIMIENTO DE LA NAVE
+            if (teclas.up && nave.y > 15) nave.y -= nave.velocidad;
+            if (teclas.down && nave.y < (canvas.height - nave.alto - 15)) nave.y += nave.velocidad;
+
+            // Balanceo estético de la nave por el oleaje
+            let balanceo = Math.sin(frameCount * 0.1) * 3;
+
+            // 4. DIBUJAR NAVE DETALLADA EN CANVAS
+            ctx.save();
+            ctx.translate(nave.x + nave.ancho/2, nave.y + nave.alto/2 + balanceo);
+            
+            // Sombra del casco
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.fillRect(-nave.ancho/2 + 5, nave.alto/2 - 8, nave.ancho - 10, 6);
+
+            // Casco de madera heráldico
+            ctx.fillStyle = '#613e1c';
+            ctx.beginPath();
+            ctx.moveTo(-nave.ancho/2, 5);
+            ctx.lineTo(nave.ancho/2 - 10, 5);
+            ctx.lineTo(nave.ancho/2, -15);
+            ctx.lineTo(-nave.ancho/2 + 8, -15);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Borde superior madera clara
+            ctx.fillStyle = '#9c6f43';
+            ctx.fillRect(-nave.ancho/2 + 8, -17, nave.ancho - 12, 3);
+
+            // Velas infladas por el viento de tormenta
+            ctx.fillStyle = '#eae5d8';
+            ctx.beginPath();
+            ctx.moveTo(-10, -15);
+            ctx.quadraticCurveTo(-25, -28, -5, -42);
+            ctx.lineTo(-3, -42);
+            ctx.quadraticCurveTo(-15, -28, -5, -15);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(10, -15);
+            ctx.quadraticCurveTo(-5, -32, 18, -48);
+            ctx.lineTo(20, -48);
+            ctx.quadraticCurveTo(5, -32, 12, -15);
+            ctx.fill();
+
+            // Cruz de Santiago en la gran vela mayor
+            ctx.fillStyle = '#8a1c1c';
+            ctx.fillRect(6, -38, 3, 20);
+            ctx.fillRect(-1, -30, 16, 3);
+
+            // Mástil central
+            ctx.fillStyle = '#36220f';
+            ctx.fillRect(8, -52, 3, 38);
+            ctx.restore();
+
+            // 5. GENERACIÓN INTELIGENTE DE ARRECIFES POLIGONALES (Mayor dificultad)
+            if (frameCount % 60 === 0) { // Mayor frecuencia de obstáculos
+                let altoObstaculo = Math.floor(Math.random() * (canvas.height / 2.4)) + 60;
+                let posicionY = Math.random() > 0.5 ? 0 : canvas.height - altoObstaculo;
+                
+                // Puntos poligonales para dar aspecto de roca escarpada e irregular
+                let puntos = [];
+                let numPuntos = 5;
+                for(let p=0; p<=numPuntos; p++) {
+                    let pct = p / numPuntos;
+                    let DesviacionHorizontal = (Math.random() - 0.5) * 18;
+                    puntos.push({
+                        y: posicionY === 0 ? (pct * altoObstaculo) : canvas.height - (pct * altoObstaculo),
+                        xOffset: DesviacionHorizontal
+                    });
+                }
+
+                obstaculos.push({
+                    x: canvas.width,
+                    y: posicionY,
+                    ancho: 55,
+                    alto: altoObstaculo,
+                    puntosPoligono: puntos
+                });
+                
+                // Incremento de velocidad más agresivo según avanzan
+                if(velocidadObstaculos < 11) velocidadObstaculos += 0.25;
+            }
+
+            // 6. RENDERIZADO Y DETECCIÓN MATEMÁTICA DE COLISIONES
+            for (let i = obstaculos.length - 1; i >= 0; i--) {
+                let obs = obstaculos[i];
+                obs.x -= velocidadObstaculos;
+
+                // Crear gradiente de piedra oscura texturizada
+                let gradienteRoca = ctx.createLinearGradient(obs.x, 0, obs.x + obs.ancho, 0);
+                gradienteRoca.addColorStop(0, '#2d3033');
+                gradienteRoca.addColorStop(0.5, '#404449');
+                gradienteRoca.addColorStop(1, '#1b1d1f');
+                
+                ctx.fillStyle = gradienteRoca;
+                ctx.strokeStyle = '#121314';
+                ctx.lineWidth = 2.5;
+                
+                // Dibujar silueta de roca irregular poligonal
+                ctx.beginPath();
+                if (obs.y === 0) { // Roca del techo
+                    ctx.moveTo(obs.x, 0);
+                    obs.puntosPoligono.forEach(pt => ctx.lineTo(obs.x + obs.ancho/2 + pt.xOffset, pt.y));
+                    ctx.lineTo(obs.x + obs.ancho, 0);
+                } else { // Roca del suelo
+                    ctx.moveTo(obs.x, canvas.height);
+                    obs.puntosPoligono.forEach(pt => ctx.lineTo(obs.x + obs.ancho/2 + pt.xOffset, pt.y));
+                    ctx.lineTo(obs.x + obs.ancho, canvas.height);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Espuma blanca de impacto del mar en la base de la roca
+                if(obs.y > 0) {
+                    ctx.fillStyle = 'rgba(240, 244, 248, 0.4)';
+                    ctx.fillRect(obs.x - 5, canvas.height - obs.alto - 4, obs.ancho + 10, 5);
+                }
+
+                // Detección matemática exacta de impacto por proximidad de caja
+                if (nave.x + 8 < obs.x + obs.ancho &&
+                    nave.x + nave.ancho - 8 > obs.x &&
+                    ((obs.y === 0 && nave.y < obs.alto) || 
+                     (obs.y > 0 && nave.y + nave.alto > obs.y))) {
+                    
+                    generarExplosionMadera(nave.x + nave.ancho/2, nave.y + nave.alto/2);
+                    finalizarPartida(false); // Derrota instantánea
+                    return;
+                }
+
+                if (obs.x + obs.ancho < 0) {
+                    obstaculos.splice(i, 1);
+                    distanciaRecorrida += 6; 
+                }
+            }
+
+            // 7. SEGUNDA CAPA DE OLEAJE FRONTAL (EFECTO PROFUNDIDAD INTERACTIVA)
+            ctx.fillStyle = 'rgba(14, 38, 59, 0.8)';
+            for (let i = 0; i < canvas.width; i += 4) {
+                let y2 = Math.sin((i - frameCount * 6) * 0.02) * 12 + (canvas.height - 45);
+                ctx.fillRect(i, y2, 4, canvas.height);
+            }
+
+            // 8. INTERFAZ DE PROGRESO DE LA TRAVESÍA NÁUTICA
+            ctx.fillStyle = '#ebdcb9';
+            ctx.font = "bold 16px 'Times New Roman'";
+            let porcentaje = Math.min(100, Math.floor((distanciaRecorrida / DISTANCIA_VICTORIA) * 100));
+            ctx.fillText("DISTANCIA DE EXPEDICIÓN: " + porcentaje + "%", 25, 35);
+            
+            // Barra de progreso heráldica superior
+            ctx.strokeStyle = '#78522e';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(25, 45, 250, 8);
+            ctx.fillStyle = '#c49a45';
+            ctx.fillRect(26, 46, (porcentaje / 100) * 248, 6);
+
+            if (distanciaRecorrida >= DISTANCIA_VICTORIA) {
+                finalizarPartida(true);
+                return;
+            }
+
+            loopJuego = requestAnimationFrame(actualizarPartida);
+        }
+
+        function actualizarParticasMadera() {
+            particulasMadera.forEach((p, index) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.2; // Gravedad interna de fragmentos
+                p.alpha -= 0.02;
+                if(p.alpha <= 0) { particulasMadera.splice(index, 1); return; }
+                
+                ctx.fillStyle = `rgba(139, 90, 43, ${p.alpha})`;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            });
+        }
+
+        function finalizarPartida(victoria) {
+            juegoActivo = false;
+            cancelAnimationFrame(loopJuego);
+
+            if (victoria) {
+                document.getElementById('instrucciones-juego').style.display = 'none';
+                document.getElementById('cuerpo-juego').style.display = 'none';
+                document.querySelectorAll('.elementos-juego').forEach(el => el.style.display = 'none');
+                document.getElementById('bloque-exito').style.display = 'flex';
+            } else {
+                // Efecto de relámpago en pantalla al perder
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0,0,canvas.width, canvas.height);
+                
+                setTimeout(() => {
+                    textoEstado.innerText = "¡NAUFRAGIO EN EL OCÉANO!";
+                    textoEstado.style.color = "#ff4d4d";
+                    btnAccion.innerText = "Reasumir el Mando";
+                    menuJuego.style.display = 'flex';
+                }, 60);
+            }
+        }
+    </script>
+</body>
+</html>
